@@ -1,0 +1,5 @@
+.chart-symbol {
+    -fx-background-color: #0000ff;
+    -fx-stroke: #0000ff;
+    -fx-shape: "M0,0 L0,1 L1,1 L1,0 L0,0";
+}
