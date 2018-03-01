@@ -5,6 +5,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
@@ -23,6 +24,7 @@ public class KplxtApplication extends Application {
     private Slider slider = createSlider();
     private ObservableList<XYChart.Series<Number, Number>> seriesList = FXCollections.observableArrayList();
     private ScatterChart<Number, Number> scatterChart = new ScatterChart<>(new NumberAxis(), new NumberAxis());
+    private LineChart<Number, Number> lineChart = new LineChart<>(new NumberAxis(), new NumberAxis());
 
     public static void main(String[] args) {
         launch(args);
@@ -30,9 +32,21 @@ public class KplxtApplication extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        XYChart.Series<Number, Number> series = new XYChart.Series<>();
+        series.getData().add(new XYChart.Data<>(0, 0));
+        series.getData().add(new XYChart.Data<>(0, 5));
+        series.getData().add(new XYChart.Data<>(5, 5));
+        series.getData().add(new XYChart.Data<>(5, 0));
+
+        lineChart.getData().add(series);
+        lineChart.setPrefHeight(99999);
+        lineChart.setPrefWidth(99999);
+        lineChart.setAxisSortingPolicy(LineChart.SortingPolicy.NONE);
+        lineChart.setCreateSymbols(false);
+
         stage.setTitle("Prime Number Spiral");
         scatterChart.setPrefHeight(99999);
-        VBox vBox = new VBox(8, new HBox(slider, createGenerateButton()), scatterChart);
+        VBox vBox = new VBox(8, new HBox(slider, createGenerateButton()), lineChart);
         Scene scene = new Scene(vBox, 500, 500);
         scene.getStylesheets().add(this.getClass().getResource("Chart.css").toExternalForm());
         stage.setScene(scene);
@@ -60,31 +74,21 @@ public class KplxtApplication extends Application {
         Button b = new Button();
         b.setText("Generate");
         b.setOnAction((e) -> {
-            long limit = ((Double)Math.pow(10, slider.getValue())).longValue();
+            int limit = ((Double)Math.pow(10, slider.getValue())).intValue();
             Platform.runLater(() -> generate(limit));
         });
         return b;
     }
 
-    private void generate(long limit) {
+    private void generate(int limit) {
         XYChart.Series<Number, Number> series = new XYChart.Series<>(
                 FXCollections.observableList(
                         generator.generate(limit)
                                 .stream()
-                                .map(point -> new XYChart.Data<Number, Number>(point.getX(), point.getY(), point.getVal()))
+                                .map(point -> new XYChart.Data<Number, Number>(point.getX(), point.getY()))
                                 .collect(Collectors.toList())
                 )
         );
-        scatterChart.setData(FXCollections.singletonObservableList(series));
-
-        Platform.runLater(this::applyNodeSize);
-    }
-
-    private void applyNodeSize() {
-        scatterChart.getData().get(0).getData().forEach(data -> {
-            StackPane pane = (StackPane)data.getNode();
-            pane.setPrefHeight(5);
-            pane.setPrefWidth(5);
-        });
+        lineChart.setData(FXCollections.singletonObservableList(series));
     }
 }

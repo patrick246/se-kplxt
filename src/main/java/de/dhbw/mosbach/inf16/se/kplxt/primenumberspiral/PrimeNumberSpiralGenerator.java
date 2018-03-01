@@ -7,30 +7,29 @@ import java.util.stream.Stream;
 
 public class PrimeNumberSpiralGenerator {
 
-    private List<NumberHolder> numberList = new ArrayList<>();
+    private List<Integer> primeList = new ArrayList<>();
 
-    public List<Point> generate(long limit) {
+    public List<Point> generate(int limit) {
         final int[] lastX = {0};
         final int[] lastY = {0};
-        final int[] directionX = {1};
-        final int[] directionY = {0};
+        final int[] directionX = {0};
+        final int[] directionY = {1};
+        final int[] lastPrime = {1};
 
         generateNumbers(limit);
 
-        return numberList
+        return primeList
                 .stream()
                 .limit(limit)
-                .map(n -> {
-                    Point point = new Point(lastX[0], lastY[0], n.number);
-
-                    if(n.isPrime) {
-                        int newXDir = nextXDirection(directionX[0], directionY[0]);
-                        int newYDir = nextYDirection(directionX[0], directionY[0]);
-                        directionX[0] = newXDir;
-                        directionY[0] = newYDir;
-                    }
-                    lastX[0] += directionX[0];
-                    lastY[0] += directionY[0];
+                .map(number -> {
+                    lastX[0] += directionX[0] * (number - lastPrime[0]);
+                    lastY[0] += directionY[0] * (number - lastPrime[0]);
+                    Point point = new Point(lastX[0], lastY[0]);
+                    int newXDir = nextXDirection(directionX[0], directionY[0]);
+                    int newYDir = nextYDirection(directionX[0], directionY[0]);
+                    directionX[0] = newXDir;
+                    directionY[0] = newYDir;
+                    lastPrime[0] = number;
                     return point;
                 })
                 .collect(Collectors.toList());
@@ -64,18 +63,18 @@ public class PrimeNumberSpiralGenerator {
     }
 
     private void generateNumbers(long n) {
-        long start = 1L;
+        int start = 1;
 
-        if(numberList.size() >= n)
+        if(primeList.size() >= n)
             return;
 
-        if(!numberList.isEmpty()) {
-            start = numberList.get(numberList.size() - 1).number + 1;
+        if(!primeList.isEmpty()) {
+            start = primeList.get(primeList.size() - 1) + 1;
         }
-        numberList.addAll(Stream.iterate(start, i -> i + 1)
+        primeList.addAll(Stream.iterate(start, i -> i + 1)
                 .limit(n)
                 .parallel()
-                .map(NumberHolder::new)
+                .filter(PrimeTester::isPrime)
                 .collect(Collectors.toList()));
     }
 }
